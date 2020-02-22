@@ -1,0 +1,19 @@
+#!/bin/awk -f
+BEGIN { matched = 2; lastMatched = 0;}
+{
+  if (matched > 0) {
+    if (/^\{"Event":"org.apache.spark.sql.execution.ui.SparkListenerSQLExecutionStart"/) {
+      matched--;
+    } else if (/^\{"Event":"org.apache.spark.sql.execution.ui.SparkListenerSQLExecutionEnd"/) {
+      matched--;
+      lastMatched = 1;
+    }
+  }
+  if (matched == 2 || !matched) {
+    if (!lastMatched) {
+      print;
+    } else {
+      lastMatched = 0;
+    }
+  } 
+}
