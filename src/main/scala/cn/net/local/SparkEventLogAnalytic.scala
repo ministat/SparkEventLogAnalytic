@@ -63,7 +63,7 @@ object SparkEventLogAnalytic {
 
     val df = spark.read.json(jsonFile)
     val df2 = df.filter("Event='SparkListenerTaskEnd'").select("Stage ID", "Task Info.*", "Task Metrics.*")
-    val frame: DataFrame = df2.select("Input Metrics.*", "Executor CPU Time", "Finish Time", "Locality")
+    val frame: DataFrame = df2.select("Input Metrics.*", "Executor Run Time", "Executor CPU Time", "Finish Time", "Locality")
     val result = frame
     result.coalesce(1)
       .write
