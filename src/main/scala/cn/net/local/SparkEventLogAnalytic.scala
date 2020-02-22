@@ -6,10 +6,10 @@ import org.kohsuke.args4j.{CmdLineException, CmdLineParser, Option}
 
 import scala.collection.JavaConverters._
 class ArgumentsParser{
-  @Option(name="-i", aliases=Array("--input-json-file"), usage="Specify the json file")
+  @Option(name="-i", aliases=Array("--input-json-file"), required=true, usage="Specify the json file")
   var inputJsonFile: String = null
 
-  @Option(name="-o", aliases=Array("--output-dir"), usage="Specify the output directory")
+  @Option(name="-o", aliases=Array("--output-dir"), required=true, usage="Specify the output directory")
   var outputDir: String = null
 
   @Option(name="-s", aliases=Array("--stage"), usage="Generate stage statistics, default is true")
@@ -48,7 +48,11 @@ object SparkEventLogAnalytic {
     val df4 = spark.sql("select 'Submission Time','Completion Time', 'Number of Tasks', 'Stage ID', t3.col.* from t2 lateral view explode(Accumulables) t3")
     df4.createOrReplaceTempView("t4")
     val result = spark.sql("select Name, sum(Value) as value from t4 group by Name order by Name") //.show(100,false)
-    result.coalesce(1).write.format("com.databricks.spark.csv").option("header", "true").save(s"${outDir}/${outputFilename}")
+    result.coalesce(1)
+      .write
+      .format("com.databricks.spark.csv")
+      .option("header", "true")
+      .save(s"${outDir}/${outputFilename}")
     result.show(false)
   }
 
@@ -59,8 +63,14 @@ object SparkEventLogAnalytic {
 
     val df = spark.read.json(jsonFile)
     val df2 = df.filter("Event='SparkListenerTaskEnd'").select("Stage ID", "Task Info.*", "Task Metrics.*")
-    val result = df2.select("Input Metrics.*","Executor CPU Time","Finish Time","Locality")
-    result.coalesce(1).write.format("com.databricks.spark.csv").option("header", "true").save(s"${outDir}/${outputFilename}")
+    val frame: DataFrame = df2.select("Input Metrics.*", "Executor CPU Time", "Finish Time", "Locality")
+    val result = frame
+    result.coalesce(1)
+      .write
+      .format("com.databricks.spark.csv")
+      .option("header", "true")
+      .option("sep", "|")
+      .save(s"${outDir}/${outputFilename}")
     result.show(false)
   }
 
