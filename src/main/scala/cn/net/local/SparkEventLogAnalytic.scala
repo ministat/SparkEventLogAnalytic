@@ -37,9 +37,20 @@ class ArgumentsParser{
 object SparkEventLogAnalytic {
   var argumentsParser: ArgumentsParser = null
 
+  private def outputSelectedDF(frame: DataFrame, outputFile: String): Unit = {
+    var outDir = argumentsParser.outputDir
+    val result = frame
+    result.coalesce(1)
+      .write
+      .format("com.databricks.spark.csv")
+      .option("header", "true")
+      .option("sep", "|")
+      .save(s"${outDir}/${outputFile}")
+    result.show(false)
+  }
+
   private def stageInfo(spark: SparkSession): Unit = {
     val jsonFile = argumentsParser.inputJsonFile
-    var outDir = argumentsParser.outputDir
     val outputFilename = "stage" + FilenameUtils.getBaseName(jsonFile)
 
     val df = spark.read.json(jsonFile)
@@ -48,30 +59,18 @@ object SparkEventLogAnalytic {
     val df4 = spark.sql("select 'Submission Time','Completion Time', 'Number of Tasks', 'Stage ID', t3.col.* from t2 lateral view explode(Accumulables) t3")
     df4.createOrReplaceTempView("t4")
     val result = spark.sql("select Name, sum(Value) as value from t4 group by Name order by Name") //.show(100,false)
-    result.coalesce(1)
-      .write
-      .format("com.databricks.spark.csv")
-      .option("header", "true")
-      .save(s"${outDir}/${outputFilename}")
-    result.show(false)
+    outputSelectedDF(result, outputFilename)
   }
 
   private def taskInfo(spark: SparkSession): Unit = {
     val jsonFile = argumentsParser.inputJsonFile
-    var outDir = argumentsParser.outputDir
     val outputFilename = "task" + FilenameUtils.getBaseName(jsonFile)
 
     val df = spark.read.json(jsonFile)
     val df2 = df.filter("Event='SparkListenerTaskEnd'").select("Stage ID", "Task Info.*", "Task Metrics.*")
     val frame: DataFrame = df2.select("Input Metrics.*", "Executor Run Time", "Executor CPU Time", "Finish Time", "Locality")
     val result = frame
-    result.coalesce(1)
-      .write
-      .format("com.databricks.spark.csv")
-      .option("header", "true")
-      .option("sep", "|")
-      .save(s"${outDir}/${outputFilename}")
-    result.show(false)
+    outputSelectedDF(result, outputFilename)
   }
 
   def main(args: Array[String]): Unit = {
