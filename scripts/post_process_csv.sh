@@ -39,10 +39,11 @@ function merge_stage_metrics() {
     #paste -d \| $final_out $tmp_out > $tmp_final
     if [ $c -eq 0 ];then
       cp $i $final_out
+    else
+      pandas_merge $final_out $i $tmp_final
+      rm $final_out
+      mv $tmp_final $final_out
     fi
-    pandas_merge $final_out $i $tmp_final
-    rm $final_out
-    mv $tmp_final $final_out
     c=$(($c+1))
   done
   echo "$column_name" > $final_out_with_hdr
