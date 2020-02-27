@@ -13,10 +13,13 @@ class ArgumentsParser{
   var outputDir: String = null
 
   @Option(name="-s", aliases=Array("--stage"), usage="Generate stage statistics, default is true")
-  var stageStat: Boolean = true
+  var stageStat: Boolean = false
 
   @Option(name="-t", aliases=Array("--task"), usage="Generate task statistics, default is false")
   var taskStat: Boolean = false
+
+  @Option(name="-e", aliases=Array("--elapse"), usage="Generate stage elapse time, default is true")
+  var elapseTime: Boolean = false
 
   def doParse(arguments: Array[String]): Unit = {
     val parser = new CmdLineParser(this)
@@ -46,7 +49,19 @@ object SparkEventLogAnalytic {
       .option("header", "true")
       .option("sep", "|")
       .save(s"${outDir}/${outputFile}")
-    result.show(false)
+    result.show(100,false)
+  }
+
+  private def elapseInfo(spark: SparkSession): Unit = {
+    val jsonFile = argumentsParser.inputJsonFile
+    val outputFilename = "elapse" + FilenameUtils.getBaseName(jsonFile)
+
+    val df = spark.read.json(jsonFile)
+    val df2 = df.filter("Event='SparkListenerStageCompleted'").select("`Stage Info`.*")
+
+    df2.createOrReplaceTempView("t2")
+    val result = spark.sql("select max(`Completion Time`) - min(`Submission Time`) as elapse from t2")
+    outputSelectedDF(result, outputFilename)
   }
 
   private def stageInfo(spark: SparkSession): Unit = {
@@ -68,7 +83,7 @@ object SparkEventLogAnalytic {
 
     val df = spark.read.json(jsonFile)
     val df2 = df.filter("Event='SparkListenerTaskEnd'").select("Stage ID", "Task Info.*", "Task Metrics.*")
-    val frame: DataFrame = df2.select("Input Metrics.*", "Executor Run Time", "Executor CPU Time", "Finish Time", "Locality")
+    val frame: DataFrame = df2.select("Shuffle Read Metrics.*", "Shuffle Write Metrics.*", "Executor Run Time", "Executor CPU Time", "Finish Time", "Locality")
     val result = frame
     outputSelectedDF(result, outputFilename)
   }
@@ -76,7 +91,7 @@ object SparkEventLogAnalytic {
   def main(args: Array[String]): Unit = {
     argumentsParser = new ArgumentsParser()
     argumentsParser.doParse(args)
-    if (!argumentsParser.stageStat && !argumentsParser.taskStat) {
+    if (!argumentsParser.stageStat && !argumentsParser.taskStat && !argumentsParser.elapseTime) {
       return
     }
     val spark = SparkSession
@@ -91,6 +106,9 @@ object SparkEventLogAnalytic {
     }
     if (argumentsParser.taskStat) {
       taskInfo(spark)
+    }
+    if (argumentsParser.elapseTime) {
+      elapseInfo(spark)
     }
     spark.close()
   }
