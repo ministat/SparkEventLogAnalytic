@@ -22,7 +22,7 @@ function merge_stage_metrics() {
   local timestamp=`date +%Y%m%m%H%M%S`
   local name column_name="Name"
   local i c=0
-  local final_out_with_hdr=stage_metrics.csv
+  local final_out_with_hdr=$2
   local final_out=stage_metrics_no_hdr.csv
   local tmp_out=/tmp/stage${timestamp}.txt
   local tmp_final=/tmp/final${timestamp}.csv
@@ -30,7 +30,7 @@ function merge_stage_metrics() {
   do
     # from /tmp/sparkeventlog-20200202124805/execId252-sqlq8_ddb50b47-02d1-/stagesingle_eventlog/part-00000-4fcc9265-2c2b-414e-ba66-8a762946fed5-c000.csv
     # extract 'sqlq8'
-    name=`echo "$i"|awk -F \/ '{print $4}'|awk -F - '{print $2}'|awk -F _ '{print $1}'`
+    name=`echo "$i"|awk -F \/ '{print $4}'|awk -F - '{print $1"-"$2}'|awk -F _ '{print $1}'`
     column_name="${column_name}|${name}"
     #if [ $c -eq 0 ];then
     #  awk -F \| '{print $1}' $i > $final_out
@@ -50,10 +50,18 @@ function merge_stage_metrics() {
   sed -i '1d' $final_out
   cat $final_out >> $final_out_with_hdr
   rm $tmp_final
+  rm $final_out
 }
 
-if [ $# -ne 1 ];then
-  echo "Specify dir"
+if [ $# -lt 1 ];then
+  echo "Specify <input_dir> (<output_csv>)"
+  echo "If output_csv is not specified, stage_metrics.csv is the default output"
   exit 1
 fi
-merge_stage_metrics $1
+
+input_dir=$1
+output=stage_metrics.csv
+if [ $# -eq 2 ];then
+  output=$2
+fi
+merge_stage_metrics $input_dir $output

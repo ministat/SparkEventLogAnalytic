@@ -1,6 +1,8 @@
 #!/bin/bash
 
 g_current_dir=$(dirname $(readlink -f $0))
+g_timestamp=`date +%Y%m%m%H%M%S`
+g_tmp_dir=/tmp/sparkevent-${g_timestamp}
 
 function extract_first_sql_execution() {
   local input_file=$1
@@ -24,17 +26,20 @@ function generate_execution_name() {
 }
 
 function main_log_parser() {
+  local tmp_dir=${g_tmp_dir}
+  if [ ! -d $tmp_dir ];then
+    mkdir $tmp_dir
+  fi
   local input_file=$1
-  local timestamp=`date +%Y%m%m%H%M%S`
+  local output_dir=$2
   local jar_file=${g_current_dir}/../target/SparkEventLogAnalytic-1.0-SNAPSHOT-jar-with-dependencies.jar
   local prefix=sparkeventlog
-  local tmp_dir=/tmp/${prefix}-${timestamp}
   local tmp_execute_log=$tmp_dir/single_eventlog.txt
   local tmp_follow_log=$tmp_dir/follow_eventlog.txt
   local tmp_input=$tmp_dir/tmp_input.txt
-  if [ ! -d $tmp_dir ];
+  if [ ! -d $output_dir ];
   then
-    mkdir $tmp_dir
+    mkdir $output_dir
   fi
 
   while [ 1 ]; do
@@ -44,7 +49,7 @@ function main_log_parser() {
       break
     fi
     local name=$(generate_execution_name $tmp_execute_log)
-    java -Dspark.master=local -jar $jar_file -i $tmp_execute_log -o $tmp_dir/$name -t -s
+    java -Dspark.master=local -jar $jar_file -i $tmp_execute_log -o $output_dir/$name -t -s
     remove_first_matched_execution $input_file $tmp_follow_log
     if [ -e $tmp_input ]; then
       rm $tmp_input
@@ -54,11 +59,17 @@ function main_log_parser() {
   done
 }
 
-if [ $# -ne 1 ]
+if [ $# -lt 1 ]
 then
-   echo "Specify the <event log file>"
+   echo "Specify the <event log file> (<output dir>)"
+   echo "The output dir is /tmp/sparkevent-xxx if you did not specify it"
    exit 1
 fi
 
 input=$1
-main_log_parser $input
+outdir=${g_tmp_dir}
+if [ $# -eq 2 ]
+then
+outdir=$2
+fi
+main_log_parser $input $outdir
