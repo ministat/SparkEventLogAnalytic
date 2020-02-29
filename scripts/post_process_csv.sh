@@ -53,7 +53,8 @@ function merge_stage_metrics() {
   do
     # from /tmp/sparkeventlog-20200202124805/execId252-sqlq8_ddb50b47-02d1-/stagesingle_eventlog/part-00000-4fcc9265-2c2b-414e-ba66-8a762946fed5-c000.csv
     # extract 'sqlq8'
-    name=`echo "$i"|awk -F \/ '{print $4}'|awk -F - '{print $1"-"$2}'|awk -F _ '{print $1}'`
+    name=`echo "$i"|sed 's/.*execId[0-9]*-\([a-zA-Z0-9]*\).*/\1/g'`
+    #name=`echo "$i"|awk -F \/ '{print $4}'|awk -F - '{print $1"-"$2}'|awk -F _ '{print $1}'`
     column_name="${column_name}|${name}"
     if [ $c -eq 0 ];then
       cp $i $final_out
@@ -72,7 +73,6 @@ function merge_stage_metrics() {
   fi
   sed -i '1d' $final_out
   cat $final_out >> $final_out_with_hdr
-  rm $tmp_final
   rm $final_out
 }
 
