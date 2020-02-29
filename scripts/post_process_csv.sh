@@ -8,7 +8,7 @@ function pandas_transpose() {
 cat << EOF > $tmp_py
 import pandas as pd
 df1 = pd.read_csv("$in").transpose()
-outfile.to_csv("$out", index=False)
+df1.to_csv("$out", index=False)
 EOF
   python $tmp_py
   rm $tmp_py
