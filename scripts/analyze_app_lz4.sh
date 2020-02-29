@@ -19,7 +19,7 @@ input=$1
 java -jar $lz4decompressor $input
 fname=`echo "$input"| cut -d'.' -f1`
 #java -Dspark.master=local -jar SparkEventLogAnalytic/target/SparkEventLogAnalytic-1.0-SNAPSHOT-jar-with-dependencies.jar -i ${fname}.txt -o /tmp -s -t
-timestamp=`date +%Y%m%m%H%M%S`
+timestamp=`date +%Y%m%d%H%M%S`
 metrics_outdir=/tmp/mysparkevent-$timestamp
 sh ${g_current_dir}/analyze_app_log.sh ${fname}.txt $metrics_outdir
 sh ${g_current_dir}/post_process_csv.sh $metrics_outdir

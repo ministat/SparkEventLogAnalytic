@@ -1,7 +1,7 @@
 #!/bin/bash
 
 g_current_dir=$(dirname $(readlink -f $0))
-g_timestamp=`date +%Y%m%m%H%M%S`
+g_timestamp=`date +%Y%m%d%H%M%S`
 g_tmp_dir=/tmp/mysparkevent-${g_timestamp}
 
 function extract_first_sql_execution() {

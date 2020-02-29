@@ -1,13 +1,13 @@
 #!/bin/bash
 
 g_current_dir=$(dirname $(readlink -f $0))
-g_timestamp=`date +%Y%m%m%H%M%S`
+g_timestamp=`date +%Y%m%d%H%M%S`
 g_tmp_dir=/tmp/sparkevent-elaspe-${g_timestamp}
 
 function pandas_transpose() {
   local in=$1
   local out=$2
-  local timestamp=`date +%Y%m%m%H%M%S`
+  local timestamp=`date +%Y%m%d%H%M%S`
   local tmp_py=/tmp/transpose${timestamp}.py
 cat << EOF > $tmp_py
 import pandas as pd
@@ -23,7 +23,7 @@ function pandas_merge() {
   local right=$2
   local out=$3
   local column=$4
-  local timestamp=`date +%Y%m%m%H%M%S`
+  local timestamp=`date +%Y%m%d%H%M%S`
   local tmp_py=/tmp/merge${timestamp}.py
 cat << EOF > $tmp_py
 import pandas as pd
@@ -40,7 +40,7 @@ function analyze_dir() {
   local outputdir=$2
   local i j c=0
   local name
-  local timestamp=`date +%Y%m%m%H%M%S`
+  local timestamp=`date +%Y%m%d%H%M%S`
   local final_out=stage_metrics_no_hdr.csv
   local tmp_out=/tmp/elapse${timestamp}.txt
   local tmp_final=/tmp/final${timestamp}.csv

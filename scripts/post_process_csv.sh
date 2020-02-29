@@ -3,7 +3,7 @@
 function pandas_transpose() {
   local in=$1
   local out=$2
-  local timestamp=`date +%Y%m%m%H%M%S`
+  local timestamp=`date +%Y%m%d%H%M%S`
   local tmp_py=/tmp/transpose${timestamp}.py
 cat << EOF > $tmp_py
 import pandas as pd
@@ -19,7 +19,7 @@ function pandas_merge() {
   local right=$2
   local out=$3
   local column=$4
-  local timestamp=`date +%Y%m%m%H%M%S`
+  local timestamp=`date +%Y%m%d%H%M%S`
   local tmp_py=/tmp/merge${timestamp}.py
 cat << EOF > $tmp_py
 import pandas as pd
@@ -36,7 +36,7 @@ function merge_stage_metrics() {
   local input_dir=$1
   local final_out_with_hdr=$2
   local handle_elapse=$3
-  local timestamp=`date +%Y%m%m%H%M%S`
+  local timestamp=`date +%Y%m%d%H%M%S`
   local name column_name="Name"
   local i c=0
   local final_out=stage_metrics_no_hdr.csv
