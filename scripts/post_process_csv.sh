@@ -8,7 +8,7 @@ function pandas_transpose() {
 cat << EOF > $tmp_py
 import pandas as pd
 df1 = pd.read_csv("$in").transpose()
-df1.to_csv("$out", index=False)
+df1.to_csv("$out", sep='|', index=False)
 EOF
   python $tmp_py
   rm $tmp_py
@@ -76,11 +76,6 @@ function merge_stage_metrics() {
   rm $final_out
 }
 
-if [ $# -lt 1 ];then
-  echo "Specify <input_dir> (<output_csv>)"
-  echo "If output_csv is not specified, stage_metrics.csv is the default output"
-  exit 1
-fi
 function usage() {
 cat << EOF
  $0:<options>
@@ -92,7 +87,7 @@ EOF
  exit 1
 }
 
-input_dir=$1
+input_dir=""
 output=stage_metrics.csv
 need_transpose=0
 while getopts 'hi:o:t' c
@@ -102,7 +97,11 @@ do
    o) output=$OPTARG;;
    h) usage;;
    t) need_transpose=1;;
+   *) usage;;
   esac
 done
 
+if [ "$input_dir" == "" ];then
+  usage
+fi
 merge_stage_metrics $input_dir $output $need_transpose
