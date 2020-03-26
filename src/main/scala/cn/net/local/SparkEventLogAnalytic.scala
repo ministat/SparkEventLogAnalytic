@@ -60,7 +60,7 @@ object SparkEventLogAnalytic {
     val df2 = df.filter("Event='SparkListenerStageCompleted'").select("`Stage Info`.*")
 
     df2.createOrReplaceTempView("t2")
-    val result = spark.sql("select max(`Completion Time`) - min(`Submission Time`) as elapse from t2")
+    val result = spark.sql("select sum(`Completion Time` - `Submission Time`) as elapse from t2")
     outputSelectedDF(result, outputFilename)
   }
 
